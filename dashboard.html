@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ExTR Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family: Arial, Helvetica, sans-serif;;
+}
+
+body{
+background:#07070c;
+color:white;
+display:flex;
+min-height:100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:230px;
+background:#0f0f18;
+padding:30px;
+}
+
+.logo{
+font-size:26px;
+color:#00f7ff;
+margin-bottom:40px;
+}
+
+.menu a{
+display:block;
+padding:12px;
+margin-bottom:10px;
+text-decoration:none;
+color:white;
+border-radius:8px;
+}
+
+.menu a:hover{
+background:#00f7ff20;
+}
+
+/* MAIN */
+
+.main{
+flex:1;
+padding:30px;
+}
+
+/* PROFILE */
+
+.profile{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:30px;
+}
+
+.avatar{
+width:45px;
+height:45px;
+border-radius:50%;
+background:#00f7ff;
+display:flex;
+align-items:center;
+justify-content:center;
+color:black;
+font-weight:bold;
+}
+
+/* CARDS */
+
+.cards{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:20px;
+margin-bottom:30px;
+}
+
+.card{
+background:#12121c;
+padding:25px;
+border-radius:15px;
+transition:0.3s;
+}
+
+.card:hover{
+transform:translateY(-8px);
+box-shadow:0 0 20px #00f7ff;
+}
+
+.card h3{
+color:#00f7ff;
+}
+
+/* FORMS */
+
+.form-box{
+background:#12121c;
+padding:20px;
+border-radius:12px;
+margin-bottom:20px;
+}
+
+.form-box input,
+.form-box select{
+width:100%;
+padding:10px;
+margin-top:10px;
+border:none;
+border-radius:6px;
+background:#1a1a25;
+color:white;
+}
+
+.form-box button{
+margin-top:10px;
+padding:10px;
+border:none;
+background:#00f7ff;
+border-radius:8px;
+cursor:pointer;
+}
+
+/* CATEGORY */
+
+.category-item{
+padding:6px;
+border-bottom:1px solid rgba(255,255,255,0.05);
+}
+
+/* CHART */
+
+.chart-box{
+background:#12121c;
+padding:20px;
+border-radius:12px;
+margin-top:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<div class="logo">ExTR</div>
+
+<div class="menu">
+
+<a href="dashboard.html">Dashboard</a>
+
+<a href="transactions.html">Transactions</a>
+
+<a href="reports.html">Reports</a>
+
+<a href="settings.html">Settings</a>
+
+<button onclick="logout()" class="logout">Logout</button>
+
+</div>
+
+</div>
+
+
+<div class="main">
+
+<div class="profile">
+
+<div style="display:flex;align-items:center;gap:10px">
+
+<div class="avatar" id="avatar">U</div>
+
+<div>
+<h3 id="welcomeUser">User</h3>
+<p style="opacity:0.6;font-size:12px">ExTR User</p>
+</div>
+
+</div>
+
+</div>
+
+
+<div class="cards">
+
+<div class="card">
+<h3>Total Expense</h3>
+<p id="totalExpense">$0</p>
+</div>
+
+<div class="card">
+<h3>Categories</h3>
+<p id="catCount">0</p>
+</div>
+
+<div class="card">
+<h3>Transactions</h3>
+<p id="txnCount">0</p>
+</div>
+
+</div>
+
+
+<div class="form-box">
+
+<h3>Add Category</h3>
+
+<input id="categoryInput" placeholder="Category name">
+
+<button onclick="addCategory()">Add Category</button>
+
+<div id="categoryList"></div>
+
+</div>
+
+
+<div class="form-box">
+
+<h3>Add Expense</h3>
+
+<input id="expenseName" placeholder="Expense name">
+
+<input id="expenseAmount" placeholder="Amount">
+
+<select id="expenseCategory"></select>
+
+<button onclick="addExpense()">Add Expense</button>
+
+</div>
+
+
+<div class="chart-box">
+
+<h3>Expense Statistics</h3>
+
+<canvas id="chart"></canvas>
+
+</div>
+
+</div>
+
+<script>
+
+/* Check Login */
+
+const user=localStorage.getItem("extrUser");
+
+if(!user){
+
+window.location.href="index.html";
+
+}
+
+document.getElementById("welcomeUser").innerText=user;
+document.getElementById("avatar").innerText=user[0].toUpperCase();
+
+/* Logout */
+
+function logout(){
+
+localStorage.removeItem("extrUser");
+
+window.location.href="index.html";
+
+}
+
+/* DATA */
+
+let categories=[];
+let expenses=[];
+
+/* Chart */
+
+const ctx=document.getElementById("chart");
+
+const chart=new Chart(ctx,{
+type:'doughnut',
+data:{
+labels:[],
+datasets:[{
+data:[],
+backgroundColor:['#00f7ff','#ff00ff','#00ff88','#ffaa00']
+}]
+}
+});
+
+/* Category */
+
+function addCategory(){
+
+let name=document.getElementById("categoryInput").value;
+
+if(name==="") return;
+
+categories.push(name);
+
+document.getElementById("categoryInput").value="";
+
+renderCategories();
+
+}
+
+function renderCategories(){
+
+let list=document.getElementById("categoryList");
+let select=document.getElementById("expenseCategory");
+
+list.innerHTML="";
+select.innerHTML="";
+
+categories.forEach(cat=>{
+
+let div=document.createElement("div");
+div.className="category-item";
+div.innerText=cat;
+list.appendChild(div);
+
+let option=document.createElement("option");
+option.text=cat;
+select.add(option);
+
+});
+
+document.getElementById("catCount").innerText=categories.length;
+
+}
+
+/* Expense */
+
+function addExpense(){
+
+let name=document.getElementById("expenseName").value;
+let amount=parseFloat(document.getElementById("expenseAmount").value);
+let category=document.getElementById("expenseCategory").value;
+
+if(!name||!amount||!category) return;
+
+expenses.push({name,amount,category});
+
+updateStats();
+
+}
+
+function updateStats(){
+
+let total=expenses.reduce((sum,e)=>sum+e.amount,0);
+
+document.getElementById("totalExpense").innerText="$"+total;
+document.getElementById("txnCount").innerText=expenses.length;
+
+let data={};
+
+expenses.forEach(e=>{
+if(!data[e.category]) data[e.category]=0;
+data[e.category]+=e.amount;
+});
+
+chart.data.labels=Object.keys(data);
+chart.data.datasets[0].data=Object.values(data);
+
+chart.update();
+
+}
+
+</script>
+
+</body>
+</html>
