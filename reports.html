@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Reports</title>
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar">
+
+<div class="logo">ExTR</div>
+
+<div class="menu">
+<a href="dashboard.html">Dashboard</a>
+<a href="transactions.html">Transactions</a>
+<a href="reports.html">Reports</a>
+<a href="settings.html">Settings</a>
+<button onclick="logout()" class="logout">Logout</button>
+</div>
+
+</div>
+
+<div class="main">
+
+<h1>Reports</h1>
+
+<canvas id="chart"></canvas>
+
+</div>
+
+</div>
+
+<script>
+
+const ctx=document.getElementById("chart")
+
+new Chart(ctx,{
+type:"pie",
+data:{
+labels:["Food","Transport","Shopping"],
+datasets:[{
+data:[300,150,200],
+backgroundColor:["cyan","pink","lime"]
+}]
+}
+})
+
+function logout(){
+localStorage.removeItem("extrUser")
+window.location.href="index.html"
+}
+
+</script>
+
+</body>
+</html>
